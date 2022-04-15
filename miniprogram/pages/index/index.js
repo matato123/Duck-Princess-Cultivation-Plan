@@ -2,6 +2,13 @@
 // const app = getApp()
 const { envList } = require('../../envList.js');
 
+import {getRequest, postRequest, postParamsRequest} from '../api/request'
+const base = '';
+// 登陆接口
+export const requst_post_login = data => postRequest(`/authorize/create`, data);
+export const get_user_info = data => getRequest(`/user/`, data);
+
+
 Page({
   data: {
     showUploadTip: false,
@@ -45,6 +52,7 @@ Page({
   },
 
   onShow(){
+    this.setUserInfo()
     this.selectUser()
   },
 
@@ -147,7 +155,7 @@ Page({
     wx.cloud.callFunction({
         name: 'quickstartFunctions',
         config: {
-          env: this.data.envId
+          env: this.data.envId 
         },
         data: {
           type: 'selectOperator'
@@ -163,10 +171,7 @@ Page({
           return false
         })
         const currentDate = new Date().getDate();
-        console.log('lastMissionDate', lastMissionDate)
-        console.log('currentDate', currentDate)
         if (lastMissionDate !== currentDate){
-          console.log('resetMission')
           wx.cloud.callFunction({
             name: 'quickstartFunctions',
             config: {
@@ -183,4 +188,47 @@ Page({
     }).catch((e) => {
     });
   },
+  getUserInfo(){
+    wx.login({
+      success (login_code) {
+        if (login_code.code) {
+          //发起网络请求
+          wx.getUserInfo({
+            lang: 'zh_CN',
+            success(user_info) {
+              var create_data = {}
+              create_data['code'] = login_code.code
+              create_data['name'] = user_info.userInfo.nickName
+              console.log(create_data)
+              requst_post_login(create_data).then(
+                login_response=>{ 
+                  login_response = login_response.data
+                  if (login_response.detail === "Success"){
+                    wx.setStorageSync('token', login_response.data['access_token'])
+                  }
+                  else (
+                    console.log(login_response.detail)
+                  )
+                }
+               )
+            }
+          })
+        } else { 
+          console.log('登录失败！' + res.errMsg)
+        }
+      }
+    })
+  },
+  setUserInfo(){
+    var token = wx.getStorageSync('token')
+    if (!token) {
+      this.getUserInfo() 
+    }
+    get_user_info().then(
+      user_info=>{
+        console.log(user_info.status_code)
+      }
+    )
+  }
 });
+
