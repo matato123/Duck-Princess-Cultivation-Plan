@@ -5,7 +5,7 @@ const { envList } = require('../../envList.js');
 import {getRequest, postRequest, postParamsRequest} from '../api/request'
 const base = '';
 // 登陆接口
-export const requst_post_login = data => postRequest(`/authorize/create`, data);
+export const requst_post_login = data => postRequest(`/authorize/token`, data); 
 export const get_user_info = data => getRequest(`/user/`, data);
 
 
@@ -22,7 +22,7 @@ Page({
       }, {
         title: '兑换奖励',
         page: 'toExchangeRewards'
-      }, {
+      }, { 
         title: '查询记录',
         page: 'selectRecord'
       },
@@ -192,18 +192,17 @@ Page({
     wx.login({
       success (login_code) {
         if (login_code.code) {
-          //发起网络请求
-          wx.getUserInfo({
-            lang: 'zh_CN',
-            success(user_info) {
+          //发起网络请求 
+          wx.getUserInfo({ 
+            lang: 'zh_CN', 
+            success(user_info) { 
               var create_data = {}
               create_data['code'] = login_code.code
               create_data['name'] = user_info.userInfo.nickName
-              console.log(create_data)
               requst_post_login(create_data).then(
                 login_response=>{ 
                   login_response = login_response.data
-                  if (login_response.detail === "Success"){
+                  if (login_response.code === 200){
                     wx.setStorageSync('token', login_response.data['access_token'])
                   }
                   else (
@@ -212,8 +211,8 @@ Page({
                 }
                )
             }
-          })
-        } else { 
+          }) 
+        } else {
           console.log('登录失败！' + res.errMsg)
         }
       }
@@ -225,10 +224,13 @@ Page({
       this.getUserInfo() 
     }
     get_user_info().then(
-      user_info=>{
-        console.log(user_info.status_code)
+      user_info=>{ 
+        if (user_info.data.code != 200){
+          this.getUserInfo()
+        }
+        wx.setStorageSync('user', user_info.data.data)
       }
     )
   }
-});
+}); 
 

@@ -1,3 +1,6 @@
+import {getRequest, postRequest, postParamsRequest} from '../api/request'
+export const create_mission = data => postRequest(`/mission/`, data); 
+
 Page({
 
   /**
@@ -23,32 +26,51 @@ Page({
     console.log('form发生了submit事件，携带数据为：', e.detail.value)
     const data = e.detail.value;
     if (data.mission_content && data.mission_integral){
-      wx.cloud.callFunction({
-        name: 'quickstartFunctions',
-        config: {
-          env: this.data.envId
-        },
-        data: {
-          type: 'addMission',
-          data: {
-            mission_content: data.mission_content,
-            mission_integral: data.mission_integral,
-            mission_image: this.data.imgSrc
-          }
+      var create_data = {}
+      create_data['content'] = data.mission_content
+      create_data['integral'] = data.mission_integral
+      create_data['image_url'] = data.imgSrc
+      create_mission(create_data).then(
+        resp=>{
+          wx.hideLoading()
+          wx.showToast({
+            title: '新增成功',
+            icon: 'success',
+            duration: 2000,
+            success: () => {
+              setTimeout(() => {
+                wx.navigateBack()
+              }, 2000)
+            }
+          })
         }
-      }).then(resp => {
-        wx.hideLoading()
-        wx.showToast({
-          title: '新增成功',
-          icon: 'success',
-          duration: 2000,
-          success: () => {
-            setTimeout(() => {
-              wx.navigateBack()
-            }, 2000)
-          }
-        })
-      })
+      )
+      // wx.cloud.callFunction({
+      //   name: 'quickstartFunctions',
+      //   config: {
+      //     env: this.data.envId
+      //   },
+      //   data: {
+      //     type: 'addMission',
+      //     data: {
+      //       mission_content: data.mission_content,
+      //       mission_integral: data.mission_integral,
+      //       mission_image: this.data.imgSrc
+      //     }
+      //   }
+      // }).then(resp => {
+      //   wx.hideLoading()
+      //   wx.showToast({
+      //     title: '新增成功',
+      //     icon: 'success',
+      //     duration: 2000,
+      //     success: () => {
+      //       setTimeout(() => {
+      //         wx.navigateBack()
+      //       }, 2000)
+      //     }
+      //   })
+      // })
     } else {
       wx.showToast({
         title: '请输入完整信息',
